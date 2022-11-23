@@ -1,0 +1,23 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file>circle-down.svg</file>
+        <file>baffled.svg</file>
+        <file>circle-left.svg</file>
+        <file>circle-right.svg</file>
+        <file>circle-up.svg</file>
+        <file>clubs.svg</file>
+        <file>cool.svg</file>
+        <file>diamonds.svg</file>
+        <file>enlarge.svg</file>
+        <file>heart.svg</file>
+        <file>hipster.svg</file>
+        <file>redo.svg</file>
+        <file>shrink.svg</file>
+        <file>spades.svg</file>
+        <file>tongue.svg</file>
+        <file>undo.svg</file>
+    </qresource>
+    <qresource prefix="/styleSheet">
+        <file>globalStyleSheet.qss</file>
+    </qresource>
+</RCC>
