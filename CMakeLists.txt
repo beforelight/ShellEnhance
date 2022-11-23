@@ -14,8 +14,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/x64/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/x64/bin)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets SerialPort)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets SerialPort)
 
 add_subdirectory(3rd/Qt-Advanced-Docking-System)
 include_directories(3rd/Qt-Advanced-Docking-System/src)
@@ -66,6 +66,7 @@ else ()
 endif ()
 
 target_link_libraries(ShellE PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(ShellE PRIVATE Qt${QT_VERSION_MAJOR}::SerialPort)
 target_link_libraries(ShellE PRIVATE qtadvanceddocking)
 
 set_target_properties(ShellE PROPERTIES

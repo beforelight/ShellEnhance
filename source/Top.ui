@@ -33,10 +33,22 @@
      <string>面板</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menu_connect">
+    <property name="title">
+     <string>连接</string>
+    </property>
+    <addaction name="action_com"/>
+   </widget>
    <addaction name="menu_file"/>
    <addaction name="menu_panel"/>
+   <addaction name="menu_connect"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_com">
+   <property name="text">
+    <string>串口</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

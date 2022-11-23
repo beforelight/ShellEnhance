@@ -5,16 +5,17 @@
 #include <QDebug>
 #include <QSettings>
 #include "Agent.h"
+#include "XtermPanel.h"
+#include "settingsdialog.h"
 struct Top::impl_t {
     Top *_this;
     ads::CDockManager *m_DockManager; // Qt 界面对象不需要使用智能指针
-    DebugView *m_debugView;
     Agent::Agent &m_agent = Agent::Agent::instance();
-
-
+    DebugView *m_debugView;
+    XtermPanel *m_xtermPanel;
+    SettingsDialog *m_settings;
 
     explicit impl_t(Top *_this_) : _this(_this_) {
-
 
 
         m_DockManager = new ads::CDockManager(_this);
@@ -33,6 +34,12 @@ struct Top::impl_t {
         m_debugView = new DebugView(_this);
         addDockWidget(m_debugView, "日志");
 
+        m_xtermPanel = new XtermPanel(_this);
+        addDockWidget(m_xtermPanel, "命令行");
+
+        m_settings = new SettingsDialog(_this);
+        m_settings->setObjectName("com_settings");
+        connect(_this->ui->action_com, &QAction::triggered, m_settings, &SettingsDialog::show);
 
         qDebug() << "ShellE";
     }
