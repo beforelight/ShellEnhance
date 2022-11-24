@@ -55,6 +55,7 @@
 #include <QIntValidator>
 #include <QLineEdit>
 #include <QSerialPortInfo>
+#include <QSettings>
 
 static const char blankString[] = QT_TRANSLATE_NOOP("SettingsDialog", "N/A");
 
@@ -71,19 +72,35 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
             this, &SettingsDialog::apply);
     connect(m_ui->serialPortInfoListBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &SettingsDialog::showPortInfo);
-    connect(m_ui->baudRateBox,  QOverload<int>::of(&QComboBox::currentIndexChanged),
+    connect(m_ui->baudRateBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &SettingsDialog::checkCustomBaudRatePolicy);
     connect(m_ui->serialPortInfoListBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &SettingsDialog::checkCustomDevicePathPolicy);
+    connect(m_ui->toolButton, &QToolButton::clicked,
+            [this]() {
+                qDebug() << "刷新串口列表";
+                auto idx_back = m_ui->serialPortInfoListBox->currentIndex();
+                fillPortsInfo();
+                m_ui->serialPortInfoListBox->setCurrentIndex(std::min(idx_back, m_ui->serialPortInfoListBox->count() - 1));
+            });
+//    m_ui->serialPortInfoListBox->installEventFilter(this);//注册事件过滤
+
+    setLinkStatus(false);
+    connect(m_ui->pushButton_link, &QPushButton::clicked, [this](bool checked) {
+        qDebug() << "尝试发出" << (checked ? "连接" : "关闭") << "信号";
+        emit tryLinkUp(checked);
+    });
 
     fillPortsParameters();
     fillPortsInfo();
 
+    _restoreState();
     updateSettings();
 }
 
 SettingsDialog::~SettingsDialog()
 {
+    _saveState();
     delete m_ui;
 }
 
@@ -131,8 +148,7 @@ void SettingsDialog::checkCustomDevicePathPolicy(int idx)
         m_ui->serialPortInfoListBox->clearEditText();
 }
 
-void SettingsDialog::fillPortsParameters()
-{
+void SettingsDialog::fillPortsParameters() {
     m_ui->baudRateBox->addItem(QStringLiteral("9600"), QSerialPort::Baud9600);
     m_ui->baudRateBox->addItem(QStringLiteral("19200"), QSerialPort::Baud19200);
     m_ui->baudRateBox->addItem(QStringLiteral("38400"), QSerialPort::Baud38400);
@@ -141,11 +157,10 @@ void SettingsDialog::fillPortsParameters()
     m_ui->baudRateBox->addItem(QStringLiteral("2000000"), 2000000);
     m_ui->baudRateBox->addItem(tr("Custom"));
 
-    m_ui->dataBitsBox->addItem(QStringLiteral("5"), QSerialPort::Data5);
-    m_ui->dataBitsBox->addItem(QStringLiteral("6"), QSerialPort::Data6);
-    m_ui->dataBitsBox->addItem(QStringLiteral("7"), QSerialPort::Data7);
     m_ui->dataBitsBox->addItem(QStringLiteral("8"), QSerialPort::Data8);
-    m_ui->dataBitsBox->setCurrentIndex(3);
+    m_ui->dataBitsBox->addItem(QStringLiteral("7"), QSerialPort::Data7);
+    m_ui->dataBitsBox->addItem(QStringLiteral("6"), QSerialPort::Data6);
+    m_ui->dataBitsBox->addItem(QStringLiteral("5"), QSerialPort::Data5);
 
     m_ui->parityBox->addItem(tr("None"), QSerialPort::NoParity);
     m_ui->parityBox->addItem(tr("Even"), QSerialPort::EvenParity);
@@ -211,12 +226,62 @@ void SettingsDialog::updateSettings()
     m_currentSettings.stringParity = m_ui->parityBox->currentText();
 
     m_currentSettings.stopBits = static_cast<QSerialPort::StopBits>(
-                m_ui->stopBitsBox->itemData(m_ui->stopBitsBox->currentIndex()).toInt());
+            m_ui->stopBitsBox->itemData(m_ui->stopBitsBox->currentIndex()).toInt());
     m_currentSettings.stringStopBits = m_ui->stopBitsBox->currentText();
 
     m_currentSettings.flowControl = static_cast<QSerialPort::FlowControl>(
-                m_ui->flowControlBox->itemData(m_ui->flowControlBox->currentIndex()).toInt());
+            m_ui->flowControlBox->itemData(m_ui->flowControlBox->currentIndex()).toInt());
     m_currentSettings.stringFlowControl = m_ui->flowControlBox->currentText();
 
-    m_currentSettings.localEchoEnabled = m_ui->localEchoCheckBox->isChecked();
 }
+void SettingsDialog::_saveState() {
+    QSettings Settings("Settings.ini", QSettings::IniFormat);
+    Settings.setValue("SettingsDialog/Geometry", this->saveGeometry());
+
+    //对话中的其他设置需要保存
+    Settings.setValue("SettingsDialog/serialPortInfoListBox", m_ui->serialPortInfoListBox->currentText());
+    Settings.setValue("SettingsDialog/baudRateBox", m_ui->baudRateBox->currentText());
+    Settings.setValue("SettingsDialog/baudRateBoxIndex", m_ui->baudRateBox->currentIndex());
+    Settings.setValue("SettingsDialog/dataBitsBox", m_ui->dataBitsBox->currentIndex());
+    Settings.setValue("SettingsDialog/parityBox", m_ui->parityBox->currentIndex());
+    Settings.setValue("SettingsDialog/stopBitsBox", m_ui->stopBitsBox->currentIndex());
+    Settings.setValue("SettingsDialog/flowControlBox", m_ui->flowControlBox->currentIndex());
+}
+void SettingsDialog::_restoreState() {
+    QSettings Settings("Settings.ini", QSettings::IniFormat);
+    this->restoreGeometry(Settings.value("SettingsDialog/Geometry").toByteArray());
+
+    //对话中的其他设置需要恢复
+    auto com = Settings.value("SettingsDialog/serialPortInfoListBox").toString();
+    if (m_ui->serialPortInfoListBox->findText(com) >= 0)
+        m_ui->serialPortInfoListBox->setCurrentIndex(m_ui->serialPortInfoListBox->findText(com));
+    m_ui->baudRateBox->setCurrentIndex(Settings.value("SettingsDialog/baudRateBoxIndex").toInt());
+    if (!m_ui->baudRateBox->currentData().isValid())
+        m_ui->baudRateBox->currentData().setValue<int>(
+                Settings.value("SettingsDialog/baudRateBox").toString().toInt());
+
+    m_ui->dataBitsBox->setCurrentIndex(Settings.value("SettingsDialog/dataBitsBox").toInt());
+    m_ui->parityBox->setCurrentIndex(Settings.value("SettingsDialog/parityBox").toInt());
+    m_ui->stopBitsBox->setCurrentIndex(Settings.value("SettingsDialog/stopBitsBox").toInt());
+    m_ui->flowControlBox->setCurrentIndex(Settings.value("SettingsDialog/flowControlBox").toInt());
+}
+void SettingsDialog::setLinkStatus(bool linked) {
+    if (linked) {
+        m_ui->pushButton_link->setChecked(linked);
+        m_ui->pushButton_link->setText("关闭");
+        m_ui->pushButton_link->setToolTip("已连接，点击关闭");
+    } else {
+        m_ui->pushButton_link->setChecked(linked);
+        m_ui->pushButton_link->setText("连接");
+        m_ui->pushButton_link->setToolTip("已关闭，点击连接");
+    }
+}
+//bool SettingsDialog::eventFilter(QObject *obj, QEvent *event) {
+//    if (event->type() == QEvent::MouseButtonPress) {
+//        if (obj == m_ui->serialPortInfoListBox) {
+//            emit m_ui->toolButton->click();
+//        }
+//    }
+//
+//    return QDialog::eventFilter(obj, event);
+//}

@@ -7,6 +7,7 @@
 #include "Agent.h"
 #include "XtermPanel.h"
 #include "settingsdialog.h"
+#include <QTimer>
 struct Top::impl_t {
     Top *_this;
     ads::CDockManager *m_DockManager; // Qt 界面对象不需要使用智能指针
@@ -40,7 +41,9 @@ struct Top::impl_t {
         m_settings = new SettingsDialog(_this);
         m_settings->setObjectName("com_settings");
         connect(_this->ui->action_com, &QAction::triggered, m_settings, &SettingsDialog::show);
-
+        QTimer::singleShot(500, [this]() {
+            _this->ui->action_com->trigger();
+        });
         qDebug() << "ShellE";
     }
 };
