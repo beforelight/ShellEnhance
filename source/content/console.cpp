@@ -49,66 +49,61 @@
 **
 ****************************************************************************/
 
-#ifndef SETTINGSDIALOG_H
-#define SETTINGSDIALOG_H
+#include "console.h"
 
-#include <QDialog>
-#include <QSerialPort>
+#include <QScrollBar>
 
-QT_BEGIN_NAMESPACE
-
-namespace Ui {
-class SettingsDialog;
+Console::Console(QWidget *parent) :
+    QPlainTextEdit(parent)
+{
+    document()->setMaximumBlockCount(100);
+//    QPalette p = palette();
+//    p.setColor(QPalette::Base, Qt::black);
+//    p.setColor(QPalette::Text, Qt::green);
+//    setPalette(p);
 }
 
-class QIntValidator;
-
-QT_END_NAMESPACE
-
-class SettingsDialog : public QDialog
+void Console::putData(const QByteArray &data)
 {
-    Q_OBJECT
+    insertPlainText(data);
 
-public:
-    struct Settings {
-        QString name;
-        qint32 baudRate;
-        QString stringBaudRate;
-        QSerialPort::DataBits dataBits;
-        QString stringDataBits;
-        QSerialPort::Parity parity;
-        QString stringParity;
-        QSerialPort::StopBits stopBits;
-        QString stringStopBits;
-        QSerialPort::FlowControl flowControl;
-        QString stringFlowControl;
-    };
+    QScrollBar *bar = verticalScrollBar();
+    bar->setValue(bar->maximum());
+}
 
-    explicit SettingsDialog(QWidget *parent = nullptr);
-    ~SettingsDialog();
+void Console::setLocalEchoEnabled(bool set)
+{
+    m_localEchoEnabled = set;
+}
 
-    Settings settings() const;
+void Console::keyPressEvent(QKeyEvent *e)
+{
+    switch (e->key()) {
+    case Qt::Key_Backspace:
+    case Qt::Key_Left:
+    case Qt::Key_Right:
+    case Qt::Key_Up:
+    case Qt::Key_Down:
+        //break;
+    default:
+//        if (m_localEchoEnabled)
+//            QPlainTextEdit::keyPressEvent(e);
+        emit getData(e->text().toLocal8Bit());
+    }
+}
 
-public slots:
-    void showPortInfo(int idx);
-    void apply();
-    void checkCustomBaudRatePolicy(int idx);
-    void checkCustomDevicePathPolicy(int idx);
-    void setDeviceStatusSlot(bool opened = false);
+void Console::mousePressEvent(QMouseEvent *e)
+{
+    Q_UNUSED(e)
+    setFocus();
+}
 
-Q_SIGNALS:
-    void openDeviceSignal(bool open = true);
-private:
-    void fillPortsParameters();
-    void fillPortsInfo();
-    void updateSettings();
+void Console::mouseDoubleClickEvent(QMouseEvent *e)
+{
+    Q_UNUSED(e)
+}
 
-    void _saveState();
-    void _restoreState();
-private:
-    Ui::SettingsDialog *m_ui = nullptr;
-    Settings m_currentSettings;
-    QIntValidator *m_intValidator = nullptr;
-};
-
-#endif // SETTINGSDIALOG_H
+void Console::contextMenuEvent(QContextMenuEvent *e)
+{
+    Q_UNUSED(e)
+}

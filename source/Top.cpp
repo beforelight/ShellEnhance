@@ -35,15 +35,18 @@ struct Top::impl_t {
         m_debugView = new DebugView(_this);
         addDockWidget(m_debugView, "日志");
 
-        m_xtermPanel = new XtermPanel(_this);
-        addDockWidget(m_xtermPanel, "命令行");
-
         m_settings = new SettingsDialog(_this);
-        m_settings->setObjectName("com_settings");
+        m_settings->setObjectName("SettingsDialog");
         connect(_this->ui->action_com, &QAction::triggered, m_settings, &SettingsDialog::show);
         QTimer::singleShot(500, [this]() {
             _this->ui->action_com->trigger();
         });
+
+        m_xtermPanel = new XtermPanel(m_settings, _this);
+        addDockWidget(m_xtermPanel, "命令行");
+
+        connect(m_settings, &SettingsDialog::openDeviceSignal, m_xtermPanel, &XtermPanel::openSerialPortSlot);
+        connect(m_xtermPanel, &XtermPanel::deviceStatusUpdateSignal, m_settings, &SettingsDialog::setDeviceStatusSlot);
         qDebug() << "ShellE";
     }
 };

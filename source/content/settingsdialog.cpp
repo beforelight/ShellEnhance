@@ -85,10 +85,11 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
             });
 //    m_ui->serialPortInfoListBox->installEventFilter(this);//注册事件过滤
 
-    setLinkStatus(false);
+    setDeviceStatusSlot(false);
     connect(m_ui->pushButton_link, &QPushButton::clicked, [this](bool checked) {
         qDebug() << "尝试发出" << (checked ? "连接" : "关闭") << "信号";
-        emit tryLinkUp(checked);
+        updateSettings();
+        emit openDeviceSignal(checked);
     });
 
     fillPortsParameters();
@@ -265,23 +266,14 @@ void SettingsDialog::_restoreState() {
     m_ui->stopBitsBox->setCurrentIndex(Settings.value("SettingsDialog/stopBitsBox").toInt());
     m_ui->flowControlBox->setCurrentIndex(Settings.value("SettingsDialog/flowControlBox").toInt());
 }
-void SettingsDialog::setLinkStatus(bool linked) {
-    if (linked) {
-        m_ui->pushButton_link->setChecked(linked);
+void SettingsDialog::setDeviceStatusSlot(bool opened) {
+    if (opened) {
+        m_ui->pushButton_link->setChecked(opened);
         m_ui->pushButton_link->setText("关闭");
         m_ui->pushButton_link->setToolTip("已连接，点击关闭");
     } else {
-        m_ui->pushButton_link->setChecked(linked);
+        m_ui->pushButton_link->setChecked(opened);
         m_ui->pushButton_link->setText("连接");
         m_ui->pushButton_link->setToolTip("已关闭，点击连接");
     }
 }
-//bool SettingsDialog::eventFilter(QObject *obj, QEvent *event) {
-//    if (event->type() == QEvent::MouseButtonPress) {
-//        if (obj == m_ui->serialPortInfoListBox) {
-//            emit m_ui->toolButton->click();
-//        }
-//    }
-//
-//    return QDialog::eventFilter(obj, event);
-//}

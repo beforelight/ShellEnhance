@@ -49,66 +49,32 @@
 **
 ****************************************************************************/
 
-#ifndef SETTINGSDIALOG_H
-#define SETTINGSDIALOG_H
+#ifndef CONSOLE_H
+#define CONSOLE_H
 
-#include <QDialog>
-#include <QSerialPort>
+#include <QPlainTextEdit>
 
-QT_BEGIN_NAMESPACE
-
-namespace Ui {
-class SettingsDialog;
-}
-
-class QIntValidator;
-
-QT_END_NAMESPACE
-
-class SettingsDialog : public QDialog
+class Console : public QPlainTextEdit
 {
     Q_OBJECT
 
+signals:
+    void getData(const QByteArray &data);
+
 public:
-    struct Settings {
-        QString name;
-        qint32 baudRate;
-        QString stringBaudRate;
-        QSerialPort::DataBits dataBits;
-        QString stringDataBits;
-        QSerialPort::Parity parity;
-        QString stringParity;
-        QSerialPort::StopBits stopBits;
-        QString stringStopBits;
-        QSerialPort::FlowControl flowControl;
-        QString stringFlowControl;
-    };
+    explicit Console(QWidget *parent = nullptr);
 
-    explicit SettingsDialog(QWidget *parent = nullptr);
-    ~SettingsDialog();
+    void putData(const QByteArray &data);
+    void setLocalEchoEnabled(bool set);
 
-    Settings settings() const;
+protected:
+    void keyPressEvent(QKeyEvent *e) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseDoubleClickEvent(QMouseEvent *e) override;
+    void contextMenuEvent(QContextMenuEvent *e) override;
 
-public slots:
-    void showPortInfo(int idx);
-    void apply();
-    void checkCustomBaudRatePolicy(int idx);
-    void checkCustomDevicePathPolicy(int idx);
-    void setDeviceStatusSlot(bool opened = false);
-
-Q_SIGNALS:
-    void openDeviceSignal(bool open = true);
 private:
-    void fillPortsParameters();
-    void fillPortsInfo();
-    void updateSettings();
-
-    void _saveState();
-    void _restoreState();
-private:
-    Ui::SettingsDialog *m_ui = nullptr;
-    Settings m_currentSettings;
-    QIntValidator *m_intValidator = nullptr;
+    bool m_localEchoEnabled = false;
 };
 
-#endif // SETTINGSDIALOG_H
+#endif // CONSOLE_H
