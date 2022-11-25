@@ -54,7 +54,7 @@
 
 #include <QTextBrowser>
 
-class Console : public QTextBrowser
+class Console : public QTextEdit
 {
     Q_OBJECT
 
@@ -63,7 +63,7 @@ signals:
 
 public:
     explicit Console(QWidget *parent = nullptr);
-
+    ~Console() override;
     void putData(const QByteArray &data);
     void setLocalEchoEnabled(bool set);
 

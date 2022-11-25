@@ -54,8 +54,11 @@
 #include <QScrollBar>
 #include <QKeyEvent>
 #include <QAction>
+#include <QFile>
+#include <QTextStream>
+#include <QDateTime>
 Console::Console(QWidget *parent) :
-        QTextBrowser(parent) {
+        QTextEdit(parent) {
     setReadOnly(true);
     document()->setMaximumBlockCount(10000);
 //    QPalette p = palette();
@@ -67,6 +70,15 @@ Console::Console(QWidget *parent) :
     copyAction->setText("复制选中内容");
     connect(copyAction, &QAction::triggered, [this]() { copy(); });
     addAction(copyAction);
+
+    //读取历史
+    {
+        QFile file("./ConsoleHistory.txt");
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QTextStream in(&file);
+            setText(in.readAll());
+        }
+    }
 }
 
 void Console::putData(const QByteArray &data) {
@@ -101,27 +113,19 @@ void Console::keyPressEvent(QKeyEvent *e)
             break;
     }
 }
-
-//void Console::mousePressEvent(QMouseEvent *e)
-//{
-////    Q_UNUSED(e)
-////    setFocus();
-//    QTextEdit::mousePressEvent(e);
-//}
-//void Console::mouseReleaseEvent(QMouseEvent *e)
-//{
-////    Q_UNUSED(e)
-////    setFocus();
-//    QTextEdit::mouseReleaseEvent(e);
-//
-//}
-//
-//void Console::mouseDoubleClickEvent(QMouseEvent *e)
-//{
-//    Q_UNUSED(e)
-//}
-//
-//void Console::contextMenuEvent(QContextMenuEvent *e)
-//{
-//    Q_UNUSED(e)
-//}
+Console::~Console() {
+    //保存历史
+    {
+        QFile file("./ConsoleHistory.txt");
+        if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+            file.write(toPlainText().toUtf8());
+            file.write(QString(
+                    "\n=================================================\n"
+                    "******    以上为%1之前的消息     ********\n"
+                    "=================================================\n"
+            ).arg(
+                    QDateTime::currentDateTime().toString("yyyy.MM.dd hh:mm:ss ddd")
+            ).toUtf8());
+        }
+    }
+}
