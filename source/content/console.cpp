@@ -52,21 +52,28 @@
 #include "console.h"
 
 #include <QScrollBar>
-
+#include <QKeyEvent>
+#include <QAction>
 Console::Console(QWidget *parent) :
-    QPlainTextEdit(parent)
-{
-    document()->setMaximumBlockCount(100);
+        QTextBrowser(parent) {
+    setReadOnly(true);
+    document()->setMaximumBlockCount(10000);
 //    QPalette p = palette();
 //    p.setColor(QPalette::Base, Qt::black);
 //    p.setColor(QPalette::Text, Qt::green);
 //    setPalette(p);
+    auto copyAction = new QAction(this);
+    copyAction->setIcon(QIcon(":/icon/copy.svg"));
+    copyAction->setText("复制选中内容");
+    connect(copyAction, &QAction::triggered, [this]() { copy(); });
+    addAction(copyAction);
 }
 
-void Console::putData(const QByteArray &data)
-{
-    insertPlainText(data);
-
+void Console::putData(const QByteArray &data) {
+    QTextCursor cursor = textCursor();
+    cursor.movePosition(QTextCursor::End);
+    setTextCursor(cursor);
+    insertPlainText(QStringDecoder(QStringDecoder::Utf8).decode(data));
     QScrollBar *bar = verticalScrollBar();
     bar->setValue(bar->maximum());
 }
@@ -79,31 +86,42 @@ void Console::setLocalEchoEnabled(bool set)
 void Console::keyPressEvent(QKeyEvent *e)
 {
     switch (e->key()) {
-    case Qt::Key_Backspace:
-    case Qt::Key_Left:
-    case Qt::Key_Right:
-    case Qt::Key_Up:
-    case Qt::Key_Down:
-        //break;
-    default:
-//        if (m_localEchoEnabled)
-//            QPlainTextEdit::keyPressEvent(e);
-        emit getData(e->text().toLocal8Bit());
+        case Qt::Key_Backspace:
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+        default:
+            if ((e->key() == Qt::Key_C || e->key() == Qt::Key_X) &&
+                e->modifiers() == Qt::ControlModifier) { //复制粘贴
+                copy();
+            } else {
+                emit getData(e->text().toLocal8Bit());
+            }
+            break;
     }
 }
 
-void Console::mousePressEvent(QMouseEvent *e)
-{
-    Q_UNUSED(e)
-    setFocus();
-}
-
-void Console::mouseDoubleClickEvent(QMouseEvent *e)
-{
-    Q_UNUSED(e)
-}
-
-void Console::contextMenuEvent(QContextMenuEvent *e)
-{
-    Q_UNUSED(e)
-}
+//void Console::mousePressEvent(QMouseEvent *e)
+//{
+////    Q_UNUSED(e)
+////    setFocus();
+//    QTextEdit::mousePressEvent(e);
+//}
+//void Console::mouseReleaseEvent(QMouseEvent *e)
+//{
+////    Q_UNUSED(e)
+////    setFocus();
+//    QTextEdit::mouseReleaseEvent(e);
+//
+//}
+//
+//void Console::mouseDoubleClickEvent(QMouseEvent *e)
+//{
+//    Q_UNUSED(e)
+//}
+//
+//void Console::contextMenuEvent(QContextMenuEvent *e)
+//{
+//    Q_UNUSED(e)
+//}

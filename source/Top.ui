@@ -45,6 +45,12 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action_com">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>串口</string>
    </property>

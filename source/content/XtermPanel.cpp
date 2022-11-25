@@ -17,15 +17,30 @@ XtermPanel::XtermPanel(QObject *dialog, QWidget *parent) :
     m_serial = new QSerialPort(this);
     connect(m_serial, &QSerialPort::errorOccurred, this, &XtermPanel::handleError);
     connect(m_serial, &QSerialPort::readyRead, this, &XtermPanel::readData);
-    connect(ui->plainTextEdit, &Console::getData, this, &XtermPanel::writeData);
+    connect(ui->textEdit, &Console::getData, this, &XtermPanel::writeData);
+    connect(ui->toolButton_send, &QToolButton::clicked, [this]() {
+        auto str = ui->lineEdit->text() + '\n';
+        writeData(str.toUtf8());
+    });
+    connect(ui->lineEdit, &QLineEdit::returnPressed, [this]() {
+        auto str = ui->lineEdit->text() + '\n';
+        writeData(str.toUtf8());
+    });
+
 }
 
 XtermPanel::~XtermPanel() {
     delete ui;
 }
 void XtermPanel::readData() {
-    const QByteArray data = m_serial->readAll();
-    ui->plainTextEdit->putData(data);
+    QByteArray data = m_serial->readAll();
+    //替换\r\n
+    //    qsizetype j = data.count() - 1;
+    //    while ((j = data.lastIndexOf("\r\n", j)) != -1) {
+    //        data.replace(j, 2, "\n");
+    //        --j;
+    //    }
+    ui->textEdit->putData(data);
 }
 void XtermPanel::handleError(QSerialPort::SerialPortError error) {
     if (error == QSerialPort::ResourceError) {
@@ -47,7 +62,6 @@ void XtermPanel::openSerialPortSlot(bool open) {
         m_serial->setStopBits(p.stopBits);
         m_serial->setFlowControl(p.flowControl);
         if (m_serial->open(QIODevice::ReadWrite)) {
-            ui->plainTextEdit->setEnabled(true);
             qDebug() << tr("Connected to %1 : %2, %3, %4, %5, %6")
                     .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
                     .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl);

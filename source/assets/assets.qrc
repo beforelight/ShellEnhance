@@ -17,6 +17,8 @@
         <file>tongue.svg</file>
         <file>undo.svg</file>
         <file>refresh.svg</file>
+        <file>copy.svg</file>
+        <file>paper-plane.svg</file>
     </qresource>
     <qresource prefix="/styleSheet">
         <file>globalStyleSheet.qss</file>

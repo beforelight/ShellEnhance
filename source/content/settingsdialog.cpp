@@ -76,7 +76,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
             this, &SettingsDialog::checkCustomBaudRatePolicy);
     connect(m_ui->serialPortInfoListBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &SettingsDialog::checkCustomDevicePathPolicy);
-    connect(m_ui->toolButton, &QToolButton::clicked,
+    connect(m_ui->toolButton_refreshPorts, &QToolButton::clicked,
             [this]() {
                 qDebug() << "刷新串口列表";
                 auto idx_back = m_ui->serialPortInfoListBox->currentIndex();

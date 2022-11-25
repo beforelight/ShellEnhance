@@ -52,9 +52,9 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-#include <QPlainTextEdit>
+#include <QTextBrowser>
 
-class Console : public QPlainTextEdit
+class Console : public QTextBrowser
 {
     Q_OBJECT
 
@@ -69,9 +69,10 @@ public:
 
 protected:
     void keyPressEvent(QKeyEvent *e) override;
-    void mousePressEvent(QMouseEvent *e) override;
-    void mouseDoubleClickEvent(QMouseEvent *e) override;
-    void contextMenuEvent(QContextMenuEvent *e) override;
+//    void mousePressEvent(QMouseEvent *e) override;
+//    void mouseReleaseEvent(QMouseEvent *e) override;
+//    void mouseDoubleClickEvent(QMouseEvent *e) override;
+//    void contextMenuEvent(QContextMenuEvent *e) override;
 
 private:
     bool m_localEchoEnabled = false;

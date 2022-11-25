@@ -47,6 +47,8 @@ struct Top::impl_t {
 
         connect(m_settings, &SettingsDialog::openDeviceSignal, m_xtermPanel, &XtermPanel::openSerialPortSlot);
         connect(m_xtermPanel, &XtermPanel::deviceStatusUpdateSignal, m_settings, &SettingsDialog::setDeviceStatusSlot);
+        connect(m_xtermPanel, &XtermPanel::deviceStatusUpdateSignal, _this->ui->action_com, &QAction::setChecked);
+
         qDebug() << "ShellE";
     }
 };
