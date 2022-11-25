@@ -174,27 +174,50 @@ public:
             m_this->m_xtermPanel->sendCommand(toCmdLineSting());
         });
     }
-//格式化为字符串，用于保存到文件
-//    QString toLineSting() {
-//    }
+    //格式化为字符串，用于保存到文件
+    QString toLineSting() {
+        QString rtv;
+        //button
+        rtv += m_button->text() + ' ';
+        if (m_button->toolTip().size() > 0) {
+            rtv += QString() + '<' + m_button->toolTip() + '>' + ' ';
+        }
+        //其他
+        for (auto widget: m_widgets) {
+            if (widget->objectName() == "QLabel")
+                rtv += dynamic_cast<QLabel *>(widget)->text();
+            else if (widget->objectName() == "IntEdit")
+                rtv += dynamic_cast<IntEdit *>(widget)->text();
+            else if (widget->objectName() == "DoubleEdit")
+                rtv += dynamic_cast<DoubleEdit *>(widget)->text();
+            else if (widget->objectName() == "QLineEdit")
+                rtv += dynamic_cast<QLineEdit *>(widget)->text();
+            rtv += ' ';
+            if (widget->toolTip().size() > 0) {
+                rtv += QString() + '<' + widget->toolTip() + '>' + ' ';
+            }
+        }
+        rtv.chop(1);
+        return rtv;
+    }
 
     //格式化为字符串，用于触发命令
     QString toCmdLineSting() {
         QString rtv;
         if (m_widgets.empty())
             return rtv;
-        for (qsizetype i = 0; i < m_widgets.count(); ++i) {
-            QString tmp = i == 0 ? "" : " ";
-            if (m_widgets[i]->objectName() == "QLabel")
-                tmp += dynamic_cast<QLabel *>(m_widgets[i])->text();
-            else if (m_widgets[i]->objectName() == "IntEdit")
-                tmp += dynamic_cast<IntEdit *>(m_widgets[i])->text();
-            else if (m_widgets[i]->objectName() == "DoubleEdit")
-                tmp += dynamic_cast<DoubleEdit *>(m_widgets[i])->text();
-            else if (m_widgets[i]->objectName() == "QLineEdit")
-                tmp += dynamic_cast<QLineEdit *>(m_widgets[i])->text();
-            rtv += tmp;
+        for (auto widget: m_widgets) {
+            if (widget->objectName() == "QLabel")
+                rtv += dynamic_cast<QLabel *>(widget)->text();
+            else if (widget->objectName() == "IntEdit")
+                rtv += dynamic_cast<IntEdit *>(widget)->text();
+            else if (widget->objectName() == "DoubleEdit")
+                rtv += dynamic_cast<DoubleEdit *>(widget)->text();
+            else if (widget->objectName() == "QLineEdit")
+                rtv += dynamic_cast<QLineEdit *>(widget)->text();
+            rtv += ' ';
         }
+        rtv.chop(1);
         return rtv;
     }
 public:
@@ -203,7 +226,6 @@ public:
     QPushButton *m_button = nullptr; //命令的按钮
     QHBoxLayout *m_hBoxLayout = nullptr;//命令和后面采用的layout
     QVector<QWidget *> m_widgets;//命令和后面一系列玩意
-
 };
 
 CommandPanel::CommandPanel(QWidget *parent, XtermPanel *xtermPanel, QString cpiniFile) :
@@ -218,7 +240,7 @@ CommandPanel::CommandPanel(QWidget *parent, XtermPanel *xtermPanel, QString cpin
             QTextStream in(&file);  //用文件构造流
             do {
                 line = in.readLine();//读取一行放到字符串里
-                if (!line.isNull()) {
+                if (!line.isNull() && !line.isEmpty()) {
                     auto item = QSharedPointer<CommandItem>(new CommandItem(this));
                     item->fromLineString(line);
                     m_items.append(item);
@@ -240,5 +262,14 @@ CommandPanel::CommandPanel(QWidget *parent, XtermPanel *xtermPanel, QString cpin
 }
 
 CommandPanel::~CommandPanel() {
+    //保存回原来的文件
+    {
+        QFile file(m_cpiniFile);
+        if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+            for (const auto &i: m_items) {
+                file.write((i->toLineSting() + '\n').toUtf8());
+            }
+        }
+    }
     delete ui;
 }
