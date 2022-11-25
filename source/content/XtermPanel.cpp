@@ -9,10 +9,10 @@
 #include "ui_XtermPanel.h"
 #include "console.h"
 #include "settingsdialog.h"
-
-
-XtermPanel::XtermPanel(QObject *dialog, QWidget *parent) :
-        m_settingDialog(dialog), QWidget(parent), ui(new Ui::XtermPanel) {
+#include <QAction>
+#include "Agent.h"
+XtermPanel::XtermPanel(QWidget *parent) :
+        QWidget(parent), ui(new Ui::XtermPanel) {
     ui->setupUi(this);
     m_serial = new QSerialPort(this);
     connect(m_serial, &QSerialPort::errorOccurred, this, &XtermPanel::handleError);
@@ -43,20 +43,33 @@ void XtermPanel::readData() {
     ui->textEdit->putData(data);
 }
 void XtermPanel::handleError(QSerialPort::SerialPortError error) {
-    if (error == QSerialPort::ResourceError) {
-        QMessageBox::critical(this, tr("Critical Error"), m_serial->errorString());
-        openSerialPortSlot(false);
+    switch (error) {
+        case QSerialPort::NoError:
+            break;
+        case QSerialPort::ResourceError:
+            QMessageBox::critical(this, tr("Critical Error"), m_serial->errorString());
+            openSerialPortSlot(false);
+            break;
+        default:
+            QMessageBox::warning(this, tr("warning"), m_serial->errorString());
+            openSerialPortSlot(false);
+            break;
     }
 }
 void XtermPanel::writeData(const QByteArray &data) {
     if (m_serial->isOpen())
         m_serial->write(data);
-    else
+    else {
         qWarning() << "串口未打开";
+        auto obj = Agent::Agent::instance().find("action_com", "QAction");
+        auto action = std::dynamic_pointer_cast<Agent::Agent::Ptr<QAction> >(obj);
+        emit action->get()->triggered(true);
+    }
 }
 void XtermPanel::openSerialPortSlot(bool open) {
     if (open) {
-        SettingsDialog *settings = dynamic_cast<SettingsDialog *>(m_settingDialog);
+        auto obj = Agent::Agent::instance().find("m_settings", "SettingsDialog");
+        auto settings = std::dynamic_pointer_cast<Agent::Agent::Ptr<SettingsDialog> >(obj)->get();
         const SettingsDialog::Settings p = settings->settings();
         m_serial->setPortName(p.name);
         m_serial->setBaudRate(p.baudRate);

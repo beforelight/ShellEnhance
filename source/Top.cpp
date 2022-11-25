@@ -40,13 +40,17 @@ struct Top::impl_t {
         addDockWidget(m_debugView, "日志");
 
         m_settings = new SettingsDialog(_this);
-        m_settings->setObjectName("SettingsDialog");
+        m_agent.append(std::make_shared<Agent::Agent::Ptr<SettingsDialog> >(
+                "SettingsDialog", m_settings, "m_settings"));
         connect(_this->ui->action_com, &QAction::triggered, m_settings, &SettingsDialog::show);
         QTimer::singleShot(500, [this]() {
             _this->ui->action_com->trigger();
         });
 
-        m_xtermPanel = new XtermPanel(m_settings, _this);
+        m_agent.append(std::make_shared<Agent::Agent::Ptr<QAction> >(
+                "QAction", _this->ui->action_com, "action_com"));
+
+        m_xtermPanel = new XtermPanel(_this);
         addDockWidget(m_xtermPanel, "命令行");
 
         connect(m_settings, &SettingsDialog::openDeviceSignal, m_xtermPanel, &XtermPanel::openSerialPortSlot);

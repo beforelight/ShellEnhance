@@ -13,7 +13,7 @@ class XtermPanel : public QWidget {
 Q_OBJECT
 
 public:
-    explicit XtermPanel(QObject *dialog,QWidget *parent = nullptr);
+    explicit XtermPanel(QWidget *parent = nullptr);
     ~XtermPanel() override;
 
 Q_SIGNALS:
@@ -28,7 +28,6 @@ public slots:
 private:
     Ui::XtermPanel *ui;
     QSerialPort *m_serial = nullptr;
-    QObject *m_settingDialog = nullptr;
 };
 
 
