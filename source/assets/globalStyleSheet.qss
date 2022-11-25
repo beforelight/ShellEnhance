@@ -3,7 +3,7 @@ QToolButton{
     border: solid 2px;
     border-width: 2px;
     background-color: rgb(253, 253, 253);
-    border-color: rgb(253, 253, 253);
+    border-color: rgb(252, 242, 225);
 }
 
 QToolButton:hover
@@ -21,5 +21,11 @@ QToolButton:pressed
     border: solid 2px;
     border-width: 2px;
     background-color: rgb(221, 221, 221);
-    border-color: rgb(255, 187, 77);
+    border-color: rgb(255, 203, 119);
+}
+
+QTextEdit
+{
+    font-size:13px;
+    font-family:Arial,Microsoft Yahei;
 }

@@ -1,20 +1,35 @@
 #include "Top.h"
 #include <QApplication>
 #include <QFile>
-QString loadStyleSheet(const QString &styleSheetFile) {
-    QFile file(styleSheetFile);
-    file.open(QFile::ReadOnly);
-    QString styleSheet;
-    if (file.isOpen()) {
-        styleSheet += QLatin1String(file.readAll());//读取样式表文件
-        file.close();
-    }
-    return styleSheet;
-}
+#include <QFileSystemWatcher>
+#define STYLE_SHEET_PATH "./style.qss"
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
-    a.setStyleSheet(loadStyleSheet(":/styleSheet/globalStyleSheet.qss"));
     Top w;
     w.show();
+
+    //设置qss
+    {
+        #ifdef QT_DEBUG
+        QFileSystemWatcher fileWatcher;
+        fileWatcher.addPath(STYLE_SHEET_PATH);
+        QObject::connect(&fileWatcher, &QFileSystemWatcher::fileChanged, [](const QString &path) {
+            QFile file(path);
+            if (file.open(QIODevice::ReadOnly)) {
+                qobject_cast<QApplication *>(QApplication::instance())->setStyleSheet(file.readAll());
+                file.close();
+            }
+        });
+        #else
+        QFile file(STYLE_SHEET_PATH);
+        if (file.open(QIODevice::ReadOnly))
+        {
+            qobject_cast<QApplication*>(QApplication::instance())->setStyleSheet(file.readAll());
+            file.close();
+        }
+        #endif
+    }
+
+
     return a.exec();
 }

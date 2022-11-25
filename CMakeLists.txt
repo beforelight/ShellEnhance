@@ -30,6 +30,7 @@ include_directories(source/device)
 include_directories(source/others)
 file(GLOB_RECURSE PROJECT_SOURCES
         "source/assets/assets.qrc"
+        "source/assets/app_win32.rc"
         "source/*.cpp"
         "source/*.h"
         "source/*.ui"
@@ -41,6 +42,7 @@ file(GLOB_RECURSE PROJECT_SOURCES
         "source/content/*.ui"
         )
 file(COPY source/content/cp_ini_default.cpini DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+configure_file("source/assets/globalStyleSheet.qss" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/style.qss" COPYONLY)
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ShellE
