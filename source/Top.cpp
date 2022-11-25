@@ -8,6 +8,10 @@
 #include "XtermPanel.h"
 #include "settingsdialog.h"
 #include <QTimer>
+#include <QFile>
+#include <QFileInfoList>
+#include <QDir>
+#include "CommandPanel.h"
 struct Top::impl_t {
     Top *_this;
     ads::CDockManager *m_DockManager; // Qt 界面对象不需要使用智能指针
@@ -48,6 +52,19 @@ struct Top::impl_t {
         connect(m_settings, &SettingsDialog::openDeviceSignal, m_xtermPanel, &XtermPanel::openSerialPortSlot);
         connect(m_xtermPanel, &XtermPanel::deviceStatusUpdateSignal, m_settings, &SettingsDialog::setDeviceStatusSlot);
         connect(m_xtermPanel, &XtermPanel::deviceStatusUpdateSignal, _this->ui->action_com, &QAction::setChecked);
+
+        {
+            //遍历当前指定目录下所有文件路径
+            QFileInfoList list = QDir(qApp->applicationDirPath()).entryInfoList();
+            //循环判断是否是后缀为csv的文件
+                    foreach(QFileInfo info, list) {
+                    if (!info.isFile() || (0 != info.suffix().compare("cpini", Qt::CaseInsensitive)))
+                        continue;
+                    qInfo() << "发现命令面板文件" << info.baseName();
+                    auto cmdPanel = new CommandPanel(_this, m_xtermPanel, info.filePath());
+                    addDockWidget(cmdPanel, info.baseName());
+                }
+        }
 
         qDebug() << "ShellE";
     }

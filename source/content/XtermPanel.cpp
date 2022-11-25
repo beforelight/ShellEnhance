@@ -49,7 +49,10 @@ void XtermPanel::handleError(QSerialPort::SerialPortError error) {
     }
 }
 void XtermPanel::writeData(const QByteArray &data) {
-    m_serial->write(data);
+    if (m_serial->isOpen())
+        m_serial->write(data);
+    else
+        qWarning() << "串口未打开";
 }
 void XtermPanel::openSerialPortSlot(bool open) {
     if (open) {
@@ -77,4 +80,8 @@ void XtermPanel::openSerialPortSlot(bool open) {
             m_serial->close();
         emit deviceStatusUpdateSignal(false);
     }
+}
+void XtermPanel::sendCommand(const QString &cmd) {
+    ui->lineEdit->setText(cmd);
+    emit ui->toolButton_send->clicked();
 }

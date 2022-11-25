@@ -24,6 +24,7 @@ public slots:
     void writeData(const QByteArray &data);
     void readData();
     void handleError(QSerialPort::SerialPortError error);
+    void sendCommand(const QString &cmd);
 private:
     Ui::XtermPanel *ui;
     QSerialPort *m_serial = nullptr;

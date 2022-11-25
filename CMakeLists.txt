@@ -40,7 +40,7 @@ file(GLOB_RECURSE PROJECT_SOURCES
         "source/content/*.h"
         "source/content/*.ui"
         )
-
+file(COPY source/content/cp_ini_default.cpini DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ShellE
