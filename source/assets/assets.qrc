@@ -21,6 +21,6 @@
         <file>paper-plane.svg</file>
     </qresource>
     <qresource prefix="/styleSheet">
-        <file>globalStyleSheet.qss</file>
+        <file>style.qss</file>
     </qresource>
 </RCC>

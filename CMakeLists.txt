@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(ShellE VERSION 0.1.0 LANGUAGES CXX)
+project(ShellE VERSION 0.1.1 LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -42,7 +42,7 @@ file(GLOB_RECURSE PROJECT_SOURCES
         "source/content/*.ui"
         )
 file(COPY source/content/cp_ini_default.cpini DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-configure_file("source/assets/globalStyleSheet.qss" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/style.qss" COPYONLY)
+configure_file("source/assets/style.qss" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/style.qss" COPYONLY)
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ShellE
@@ -92,6 +92,7 @@ if (WIN32 AND "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib
             )
+    install(FILES source/assets/style.qss DESTINATION bin)
     include(InstallRequiredSystemLibraries) ## 添加vcruntime
     set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # 如果应用程序使用Visual Studio 2015或者更新的版本
     set(CPACK_PACKAGE_INSTALL_DIRECTORY "ShellEnhance") ## 设置安装的文件夹名字
@@ -104,7 +105,7 @@ if (WIN32 AND "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "用于嵌入式终端交互的上位机")
     set(CPACK_RPM_PACKAGE_GROUP "微纳光学教研室") # 设置 group 名字
     set(CPACK_PACKAGE_VENDOR "微纳光学教研室") # 设置 vendor 名字
-    set(CPACK_RPM_PACKAGE_LICENSE "Apache 2.0 + Common Clause 1.0") # 设置 license 信息
+    set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
     set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
     set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
     set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
@@ -119,9 +120,9 @@ if (WIN32 AND "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
             COMMAND "${CMAKE_COMMAND}" -E
             env PATH="${_qt_bin_dir}" windeployqt
             --verbose 0
-#            --no-compiler-runtime
-#            --no-angle
-#            --no-webkit2
+            --no-compiler-runtime
+            --no-system-d3d-compiler
+            --no-opengl-sw
             --no-quick-import
             --no-translations
             --dir "${CMAKE_CURRENT_BINARY_DIR}/qtDeploy/" $<TARGET_FILE:ShellE>
