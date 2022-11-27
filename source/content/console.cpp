@@ -57,6 +57,8 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDateTime>
+#include <QStandardPaths>
+#include <QDir>
 Console::Console(QWidget *parent) :
         QTextEdit(parent) {
     setReadOnly(true);
@@ -73,7 +75,10 @@ Console::Console(QWidget *parent) :
 
     //读取历史
     {
-        QFile file("./ConsoleHistory.txt");
+        QFile file(QDir(
+                QStandardPaths::writableLocation(
+                        QStandardPaths::AppDataLocation)).absoluteFilePath(
+                "ConsoleHistory.txt"));
         if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             QTextStream in(&file);
             setText(in.readAll());
@@ -116,7 +121,10 @@ void Console::keyPressEvent(QKeyEvent *e)
 Console::~Console() {
     //保存历史
     {
-        QFile file("./ConsoleHistory.txt");
+        QFile file(QDir(
+                QStandardPaths::writableLocation(
+                        QStandardPaths::AppDataLocation)).absoluteFilePath(
+                "ConsoleHistory.txt"));
         if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
             file.write(toPlainText().toUtf8());
             file.write(QString(

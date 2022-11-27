@@ -99,6 +99,8 @@ void Top::_restoreState() {
     QSettings Settings(
             QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
                     .absoluteFilePath("Settings.ini"), QSettings::IniFormat);
+    qDebug() << "设置文件在" << QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
+            .absoluteFilePath("Settings.ini");
     this->restoreGeometry(Settings.value("top/Geometry").toByteArray());
     this->restoreState(Settings.value("top/State").toByteArray());
     impl->m_DockManager->restoreState(Settings.value("top/DockingState").toByteArray());
