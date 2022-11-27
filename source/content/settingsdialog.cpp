@@ -56,6 +56,8 @@
 #include <QLineEdit>
 #include <QSerialPortInfo>
 #include <QSettings>
+#include <QStandardPaths>
+#include <QDir>
 
 static const char blankString[] = QT_TRANSLATE_NOOP("SettingsDialog", "N/A");
 
@@ -236,7 +238,9 @@ void SettingsDialog::updateSettings()
 
 }
 void SettingsDialog::_saveState() {
-    QSettings Settings("Settings.ini", QSettings::IniFormat);
+    QSettings Settings(
+            QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
+                    .absoluteFilePath("Settings.ini"), QSettings::IniFormat);
     Settings.setValue("SettingsDialog/Geometry", this->saveGeometry());
 
     //对话中的其他设置需要保存
@@ -249,7 +253,9 @@ void SettingsDialog::_saveState() {
     Settings.setValue("SettingsDialog/flowControlBox", m_ui->flowControlBox->currentIndex());
 }
 void SettingsDialog::_restoreState() {
-    QSettings Settings("Settings.ini", QSettings::IniFormat);
+    QSettings Settings(
+            QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
+                    .absoluteFilePath("Settings.ini"), QSettings::IniFormat);
     this->restoreGeometry(Settings.value("SettingsDialog/Geometry").toByteArray());
 
     //对话中的其他设置需要恢复

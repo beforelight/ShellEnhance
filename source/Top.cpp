@@ -11,6 +11,7 @@
 #include <QFile>
 #include <QFileInfoList>
 #include <QDir>
+#include <QStandardPaths>
 #include "CommandPanel.h"
 struct Top::impl_t {
     Top *_this;
@@ -32,7 +33,7 @@ struct Top::impl_t {
             DockWidget->setWidget(widget);
             DockWidget->setObjectName(title + "_dockWidget");
             _this->ui->menu_panel->addAction(DockWidget->toggleViewAction());
-            m_DockManager->addDockWidget(ads::NoDockWidgetArea, DockWidget);
+            m_DockManager->addDockWidget(ads::CenterDockWidgetArea, DockWidget, m_DockManager->dockArea(0));
             return DockWidget;
         };
 
@@ -86,13 +87,18 @@ Top::Top(QWidget *parent)
 }
 
 void Top::_saveState() {
-    QSettings Settings("Settings.ini", QSettings::IniFormat);
+    QSettings Settings(
+            QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
+                    .absoluteFilePath("Settings.ini"), QSettings::IniFormat);
     Settings.setValue("top/Geometry", this->saveGeometry());
     Settings.setValue("top/State", this->saveState());
     Settings.setValue("top/DockingState", impl->m_DockManager->saveState());
 }
 void Top::_restoreState() {
-    QSettings Settings("Settings.ini", QSettings::IniFormat);
+
+    QSettings Settings(
+            QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
+                    .absoluteFilePath("Settings.ini"), QSettings::IniFormat);
     this->restoreGeometry(Settings.value("top/Geometry").toByteArray());
     this->restoreState(Settings.value("top/State").toByteArray());
     impl->m_DockManager->restoreState(Settings.value("top/DockingState").toByteArray());
