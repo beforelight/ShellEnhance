@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.22)
 
-project(ShellE VERSION 0.1 LANGUAGES CXX)
+project(ShellE VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -79,10 +79,70 @@ set_target_properties(ShellE PROPERTIES
         WIN32_EXECUTABLE TRUE
         )
 
-install(TARGETS ShellE
-        BUNDLE DESTINATION .
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
 if (QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(ShellE)
+endif ()
+
+## 打包相关
+if (WIN32 AND "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+
+    install(TARGETS ShellE
+            BUNDLE DESTINATION .
+            RUNTIME DESTINATION bin
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+            )
+    include(InstallRequiredSystemLibraries) ## 添加vcruntime
+    set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # 如果应用程序使用Visual Studio 2015或者更新的版本
+    set(CPACK_PACKAGE_INSTALL_DIRECTORY "ShellEnhance") ## 设置安装的文件夹名字
+    set(CPACK_INSTALL_PREFIX "c:/") #安装目录
+    set(CPACK_NSIS_MODIFY_PATH ON)
+    set(CPACK_GENERATOR "ZIP;NSIS")
+    set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+    set(CPACK_PACKAGE_NAME "shellE")
+    set(CPACK_PACKAGE_VENDOR "xiao")
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "用于嵌入式终端交互的上位机")
+    set(CPACK_RPM_PACKAGE_GROUP "微纳光学教研室") # 设置 group 名字
+    set(CPACK_PACKAGE_VENDOR "微纳光学教研室") # 设置 vendor 名字
+    set(CPACK_RPM_PACKAGE_LICENSE "Apache 2.0 + Common Clause 1.0") # 设置 license 信息
+    set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+    set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+    set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+    set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
+
+    ## 拷贝QT库 end # install 从3.12开始支持生成表达式
+    # install 从3.12开始支持生成表达式
+    get_target_property(_qmake_executable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+    get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+    add_custom_command(TARGET ShellE POST_BUILD
+#            COMMAND "${CMAKE_COMMAND}" -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/qtDeploy/"
+            COMMAND "${CMAKE_COMMAND}" -E
+            env PATH="${_qt_bin_dir}" windeployqt
+            --verbose 0
+#            --no-compiler-runtime
+#            --no-angle
+#            --no-webkit2
+            --no-quick-import
+            --no-translations
+            --dir "${CMAKE_CURRENT_BINARY_DIR}/qtDeploy/" $<TARGET_FILE:ShellE>
+            COMMENT "Deploying Qt..."
+            )
+
+    install(
+            DIRECTORY "${CMAKE_BINARY_DIR}/qtDeploy/"
+            DESTINATION bin
+    )
+    ## 拷贝QT库 end
+
+    ## 生成快捷方式
+    set(EXE_TARGET_NAME "ShellE")
+    set(EWS_APP_NAME "Shell增强")
+    set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
+    CreateShortCut \\\"$DESKTOP\\\\${EWS_APP_NAME}.lnk\\\" \\\"$INSTDIR\\\\bin\\\\${EXE_TARGET_NAME}.exe\\\"
+    ")
+    set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
+    Delete \\\"$DESKTOP\\\\${EWS_APP_NAME}.lnk\\\"
+        ")
+    ## 生成快捷方式 end
+    INCLUDE(CPack)
 endif ()
