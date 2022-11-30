@@ -90,6 +90,12 @@ void Console::putData(const QByteArray &data) {
     QTextCursor cursor = textCursor();
     cursor.movePosition(QTextCursor::End);
     setTextCursor(cursor);
+    long long int index = 0;
+    auto newData = data;
+    while ((index = newData.indexOf("\r\n", index)) != -1) {
+        newData.replace(index, 2, "\n");
+        index += 1;
+    }
     insertPlainText(QStringDecoder(QStringDecoder::Utf8).decode(data));
     QScrollBar *bar = verticalScrollBar();
     bar->setValue(bar->maximum());

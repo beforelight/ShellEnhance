@@ -2,7 +2,8 @@
 #include <QApplication>
 #include <QFile>
 #include <QFileSystemWatcher>
-#define STYLE_SHEET_PATH "./style.qss"
+#include <QDir>
+#define STYLE_SHEET_PATH QDir(QCoreApplication::applicationDirPath()).absoluteFilePath("style.qss")
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
     Top w;
