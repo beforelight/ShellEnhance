@@ -170,9 +170,24 @@ public:
         }
 
         //连接信号
-        connect(m_button, &QPushButton::released, [this]() {
-            m_this->m_xtermPanel->sendCommand(toCmdLineSting());
-        });
+        {
+            connect(m_button, &QPushButton::released, [this]() {
+                m_this->m_xtermPanel->sendCommand(toCmdLineSting());
+            });
+            auto lineEditSolt = [this]() {
+                qDebug() << "QLineEdit发出了returnPressed";
+                m_this->m_xtermPanel->sendCommand(toCmdLineSting());
+            };
+            for (auto widget: m_widgets) {
+                if (widget->objectName() == "IntEdit")
+                    connect(dynamic_cast<IntEdit *>(widget), &QLineEdit::returnPressed, lineEditSolt);
+                else if (widget->objectName() == "DoubleEdit")
+                    connect(dynamic_cast<DoubleEdit *>(widget), &QLineEdit::returnPressed, lineEditSolt);
+                else if (widget->objectName() == "QLineEdit")
+                    connect(dynamic_cast<QLineEdit *>(widget), &QLineEdit::returnPressed, lineEditSolt);
+            }
+        }
+
     }
     //格式化为字符串，用于保存到文件
     QString toLineSting() {

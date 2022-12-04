@@ -82,6 +82,9 @@ Console::Console(QWidget *parent) :
         if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             QTextStream in(&file);
             setText(in.readAll());
+            QTextCursor cursor = textCursor();
+            cursor.movePosition(QTextCursor::End);
+            setTextCursor(cursor);
         }
     }
 }
