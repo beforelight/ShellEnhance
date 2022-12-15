@@ -85,23 +85,47 @@ Console::Console(QWidget *parent) :
             QTextCursor cursor = textCursor();
             cursor.movePosition(QTextCursor::End);
             setTextCursor(cursor);
+            QScrollBar *bar = verticalScrollBar();
+            bar->setValue(bar->maximum());
         }
     }
+
+    m_timer = new QTimer(this);
+    m_timer->setSingleShot(true);
+    m_timer->setInterval(50);
+    connect(m_timer, &QTimer::timeout, [this]() {
+        insertPlainText(m_data);
+        m_data.clear();
+        QTextCursor cursor = textCursor();
+        cursor.movePosition(QTextCursor::End);
+        setTextCursor(cursor);
+        QScrollBar *bar = verticalScrollBar();
+        bar->setValue(bar->maximum());
+    });
 }
 
 void Console::putData(const QByteArray &data) {
-    QTextCursor cursor = textCursor();
-    cursor.movePosition(QTextCursor::End);
-    setTextCursor(cursor);
-    long long int index = 0;
-    auto newData = data;
-    while ((index = newData.indexOf("\r\n", index)) != -1) {
-        newData.replace(index, 2, "\n");
-        index += 1;
+    m_data.append(data);
+    #ifndef NDEBUG
+    {
+        auto idx = m_data.lastIndexOf('\n') + 1;
+        if (idx > 0) {
+            auto d1 = m_data.chopped(m_data.size() - idx);
+            auto d2 = m_data = m_data.sliced(idx);
+            Q_UNUSED(d1);
+            Q_UNUSED(d2);
+        }
+    };
+    #endif
+    if (m_data.size() > 1000) {
+        //尾项查找\n
+        auto idx = m_data.lastIndexOf('\n') + 1;
+        if(idx>0){
+            insertPlainText(m_data.chopped(m_data.size() - idx));
+            m_data = m_data.sliced(idx);
+        }
     }
-    insertPlainText(QStringDecoder(QStringDecoder::Utf8).decode(data));
-    QScrollBar *bar = verticalScrollBar();
-    bar->setValue(bar->maximum());
+    m_timer->start();
 }
 
 void Console::setLocalEchoEnabled(bool set)

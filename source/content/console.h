@@ -53,10 +53,11 @@
 #define CONSOLE_H
 
 #include <QTextBrowser>
+#include <QTimer>
+#include <QByteArray>
 
-class Console : public QTextEdit
-{
-    Q_OBJECT
+class Console : public QTextEdit{
+Q_OBJECT
 
 signals:
     void getData(const QByteArray &data);
@@ -76,6 +77,8 @@ protected:
 
 private:
     bool m_localEchoEnabled = false;
+    QByteArray m_data;
+    QTimer *m_timer;
 };
 
 #endif // CONSOLE_H
