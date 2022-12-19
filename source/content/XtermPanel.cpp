@@ -43,11 +43,15 @@ void XtermPanel::readData() {
     ui->textEdit->putData(data);
 }
 void XtermPanel::handleError(QSerialPort::SerialPortError error) {
+    auto obj = Agent::Agent::instance().find("action_com", "QAction");
+    auto action = std::dynamic_pointer_cast<Agent::Agent::Ptr<QAction> >(obj);
     switch (error) {
         case QSerialPort::NoError:
             break;
         case QSerialPort::ResourceError:
-            QMessageBox::critical(this, tr("Critical Error"), m_serial->errorString());
+//            QMessageBox::critical(this, tr("Critical Error"), m_serial->errorString());
+            qCritical() << m_serial->errorString();
+            emit action->get()->triggered(true);
             openSerialPortSlot(false);
             break;
         default:

@@ -56,7 +56,7 @@
 #include <QTimer>
 #include <QByteArray>
 
-class Console : public QTextEdit{
+class Console : public QTextEdit {
 Q_OBJECT
 
 signals:
@@ -74,7 +74,7 @@ protected:
 //    void mouseReleaseEvent(QMouseEvent *e) override;
 //    void mouseDoubleClickEvent(QMouseEvent *e) override;
 //    void contextMenuEvent(QContextMenuEvent *e) override;
-
+    void MoveTextCursorToEnd();
 private:
     bool m_localEchoEnabled = false;
     QByteArray m_data;

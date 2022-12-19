@@ -82,11 +82,9 @@ Console::Console(QWidget *parent) :
         if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             QTextStream in(&file);
             setText(in.readAll());
-            QTextCursor cursor = textCursor();
-            cursor.movePosition(QTextCursor::End);
-            setTextCursor(cursor);
             QScrollBar *bar = verticalScrollBar();
             bar->setValue(bar->maximum());
+            MoveTextCursorToEnd();
         }
     }
 
@@ -94,13 +92,10 @@ Console::Console(QWidget *parent) :
     m_timer->setSingleShot(true);
     m_timer->setInterval(50);
     connect(m_timer, &QTimer::timeout, [this]() {
+        MoveTextCursorToEnd();
         insertPlainText(m_data);
         m_data.clear();
-        QTextCursor cursor = textCursor();
-        cursor.movePosition(QTextCursor::End);
-        setTextCursor(cursor);
-        QScrollBar *bar = verticalScrollBar();
-        bar->setValue(bar->maximum());
+        MoveTextCursorToEnd();
     });
 }
 
@@ -111,7 +106,7 @@ void Console::putData(const QByteArray &data) {
         auto idx = m_data.lastIndexOf('\n') + 1;
         if (idx > 0) {
             auto d1 = m_data.chopped(m_data.size() - idx);
-            auto d2 = m_data = m_data.sliced(idx);
+            auto d2 = m_data.sliced(idx);
             Q_UNUSED(d1);
             Q_UNUSED(d2);
         }
@@ -121,8 +116,10 @@ void Console::putData(const QByteArray &data) {
         //尾项查找\n
         auto idx = m_data.lastIndexOf('\n') + 1;
         if(idx>0){
+            MoveTextCursorToEnd();
             insertPlainText(m_data.chopped(m_data.size() - idx));
             m_data = m_data.sliced(idx);
+            MoveTextCursorToEnd();
         }
     }
     m_timer->start();
@@ -169,4 +166,9 @@ Console::~Console() {
             ).toUtf8());
         }
     }
+}
+void Console::MoveTextCursorToEnd() {
+    QTextCursor cursor = textCursor();
+    cursor.movePosition(QTextCursor::End);
+    setTextCursor(cursor);
 }
