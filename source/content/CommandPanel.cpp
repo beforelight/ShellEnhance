@@ -10,6 +10,7 @@
 #include <QIntValidator>
 #include <QDoubleValidator>
 #include <QKeyEvent>
+#include <QComboBox>
 
 
 class IntEdit : public QLineEdit {
@@ -89,6 +90,37 @@ public:
         }
     }
 };
+
+class ComboBox : public QComboBox {
+Q_OBJECT
+public:
+    explicit ComboBox(QWidget *parent = nullptr) : QComboBox(parent) {}
+
+    void setText(const QString &str) {
+        QString cur;
+        cur = str.chopped(str.size() - str.indexOf(':'));
+        QString list;
+        list = str.sliced(str.indexOf(':') + 1);
+        QStringList strList = list.split(',');
+
+        for (auto &i: strList) {
+            addItem(i);
+        }
+        setCurrentText(cur);
+        m_listBack = list;
+    }
+
+    QString getFileString() {
+        QString str;
+        str += currentText();
+        str += ':';
+        str += m_listBack;
+        return str;
+    }
+private:
+    QString m_listBack;//记录列表
+
+};
 #include "CommandPanel.moc"
 
 // 判断是否为数字
@@ -104,6 +136,11 @@ bool isInt(const QString &str) {
     str.toInt(&isInt);
     return isInt && (!str.contains('.')) && (!str.contains('E', Qt::CaseInsensitive));
 }
+
+// 判断是不是ComboBox
+bool isComboBox(const QString &str) {
+    return str.indexOf(':') >= 0;
+};
 
 class CommandPanel::CommandItem {
 public:
@@ -139,7 +176,13 @@ public:
                 m_widgets.append(label);
                 for (qsizetype i = 2; i < m_itemStr.count(); ++i) {
                     QWidget *back;
-                    if (isInt(m_itemStr[i].first)) {
+                    if (isComboBox(m_itemStr[i].first)) {
+                        auto widget = new ComboBox(m_this);
+                        widget->setObjectName("ComboBox");
+                        widget->setText(m_itemStr[i].first);
+                        widget->setToolTip(m_itemStr[i].second);
+                        back = widget;
+                    } else if (isInt(m_itemStr[i].first)) {
                         auto widget = new IntEdit(m_this);
                         widget->setObjectName("IntEdit");
                         widget->setText(m_itemStr[i].first);
@@ -207,6 +250,8 @@ public:
                 rtv += dynamic_cast<DoubleEdit *>(widget)->text();
             else if (widget->objectName() == "QLineEdit")
                 rtv += dynamic_cast<QLineEdit *>(widget)->text();
+            else if (widget->objectName() == "ComboBox")
+                rtv += dynamic_cast<ComboBox *>(widget)->getFileString();
             rtv += ' ';
             if (widget->toolTip().size() > 0) {
                 rtv += QString() + '<' + widget->toolTip() + '>' + ' ';
@@ -230,6 +275,8 @@ public:
                 rtv += dynamic_cast<DoubleEdit *>(widget)->text();
             else if (widget->objectName() == "QLineEdit")
                 rtv += dynamic_cast<QLineEdit *>(widget)->text();
+            else if (widget->objectName() == "ComboBox")
+                rtv += dynamic_cast<ComboBox *>(widget)->currentText();
             rtv += ' ';
         }
         rtv.chop(1);
