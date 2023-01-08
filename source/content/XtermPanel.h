@@ -25,9 +25,14 @@ public slots:
     void readData();
     void handleError(QSerialPort::SerialPortError error);
     void sendCommand(const QString &cmd);
+
+public:
+    void _saveState();
+    void _restoreState();
 private:
     Ui::XtermPanel *ui;
     QSerialPort *m_serial = nullptr;
+    QStringList m_valueList;//历史记录保存列表
 };
 
 

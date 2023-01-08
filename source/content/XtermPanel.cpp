@@ -10,26 +10,55 @@
 #include "console.h"
 #include "settingsdialog.h"
 #include <QAction>
+#include <QStandardPaths>
+#include <QSettings>
+#include <QDir>
+#include <QCompleter>
+#include <QStringListModel>
 #include "Agent.h"
 XtermPanel::XtermPanel(QWidget *parent) :
         QWidget(parent), ui(new Ui::XtermPanel) {
     ui->setupUi(this);
     m_serial = new QSerialPort(this);
+
+    //实现输入栏自动补全和历史记录
+    auto *completer = new QCompleter(this); //提供自动补全的对象可用于lineEdit和combobox
+    auto *listModel = new QStringListModel(m_valueList, this);//填充模型
+    completer->setModel(listModel);//填充数据来源模型
+    completer->setCaseSensitivity(Qt::CaseSensitive);
+    ui->lineEdit->setCompleter(completer);//使lineEdit提供自动完成
+    //实现输入栏自动补全和历史记录end
+
     connect(m_serial, &QSerialPort::errorOccurred, this, &XtermPanel::handleError);
     connect(m_serial, &QSerialPort::readyRead, this, &XtermPanel::readData);
     connect(ui->textEdit, &Console::getData, this, &XtermPanel::writeData);
-    connect(ui->toolButton_send, &QToolButton::clicked, [this]() {
+    auto lineEditReturnPressedSlot = [this, listModel]() {
         auto str = ui->lineEdit->text() + '\n';
         writeData(str.toUtf8());
-    });
-    connect(ui->lineEdit, &QLineEdit::returnPressed, [this]() {
-        auto str = ui->lineEdit->text() + '\n';
-        writeData(str.toUtf8());
-    });
+        {
+            //保存历史记录
+            QString text = ui->lineEdit->text();//获取lineEdit的数据
+            if (QString::compare(text, QString("")) != 0) {//判断是不是为空
+                bool flag = m_valueList.contains(text, Qt::CaseSensitive);//忽略大小写搜索历史记录中(calueList中的text文本),如果list中包含text返回ture,为了不保存重复值,就在返回false是再想list中添加text
+                if (!flag) {
+                    m_valueList.append(text);
+                    if (m_valueList.size() > 100)
+                        m_valueList.pop_front();
+                    listModel->setStringList(m_valueList);
+                }
+            }
+        }
+    };
+    connect(ui->toolButton_send, &QToolButton::clicked, lineEditReturnPressedSlot);
+    connect(ui->lineEdit, &QLineEdit::returnPressed, lineEditReturnPressedSlot);
 
+    _restoreState();
+    ui->lineEdit->setClearButtonEnabled(true);
+    listModel->setStringList(m_valueList);
 }
 
 XtermPanel::~XtermPanel() {
+    _saveState();
     delete ui;
 }
 void XtermPanel::readData() {
@@ -64,6 +93,7 @@ void XtermPanel::writeData(const QByteArray &data) {
     if (m_serial->isOpen())
         m_serial->write(data);
     else {
+        QMessageBox::warning(nullptr, tr("Warning"), "串口未打开");
         qWarning() << "串口未打开";
         auto obj = Agent::Agent::instance().find("action_com", "QAction");
         auto action = std::dynamic_pointer_cast<Agent::Agent::Ptr<QAction> >(obj);
@@ -101,4 +131,37 @@ void XtermPanel::openSerialPortSlot(bool open) {
 void XtermPanel::sendCommand(const QString &cmd) {
     ui->lineEdit->setText(cmd);
     emit ui->toolButton_send->clicked();
+}
+void XtermPanel::_saveState() {
+    //保存m_valueList
+    {
+        QFile file(QDir(
+                QStandardPaths::writableLocation(
+                        QStandardPaths::AppDataLocation)).absoluteFilePath(
+                "CommandHistory.txt"));
+        if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+            for (auto &i: m_valueList) {
+                file.write(i.toUtf8());
+                file.write("\n");
+            }
+        }
+    }
+}
+void XtermPanel::_restoreState() {
+    //恢复m_valueList
+    {
+        QFile file(QDir(
+                QStandardPaths::writableLocation(
+                        QStandardPaths::AppDataLocation)).absoluteFilePath(
+                "CommandHistory.txt"));
+        if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+            QTextStream in(&file);  //用文件构造流
+            QString line = in.readLine();;
+            while (!line.isNull())//字符串有内容
+            {
+                m_valueList.push_back(line);
+                line = in.readLine();//循环读取下行
+            }
+        }
+    }
 }
