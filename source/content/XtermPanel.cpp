@@ -116,7 +116,7 @@ void XtermPanel::openSerialPortSlot(bool open) {
                     .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
                     .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl);
             emit deviceStatusUpdateSignal(true);
-
+            readData();//刷新一次缓存，可能在打开之前已经接收了很多字节了
         } else {
             emit deviceStatusUpdateSignal(false);
             QMessageBox::critical(this, tr("Error"), m_serial->errorString());
