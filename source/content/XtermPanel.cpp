@@ -39,18 +39,26 @@ XtermPanel::XtermPanel(QWidget *parent) :
             //保存历史记录
             QString text = ui->lineEdit->text();//获取lineEdit的数据
             if (QString::compare(text, QString("")) != 0) {//判断是不是为空
-                bool flag = m_valueList.contains(text, Qt::CaseSensitive);//忽略大小写搜索历史记录中(calueList中的text文本),如果list中包含text返回ture,为了不保存重复值,就在返回false是再想list中添加text
-                if (!flag) {
-                    m_valueList.append(text);
-                    if (m_valueList.size() > 100)
-                        m_valueList.pop_front();
-                    listModel->setStringList(m_valueList);
-                }
+                historyAppend(text);
+                listModel->setStringList(m_valueList);
             }
         }
+        m_valueIter = ~0;
     };
     connect(ui->toolButton_send, &QToolButton::clicked, lineEditReturnPressedSlot);
     connect(ui->lineEdit, &QLineEdit::returnPressed, lineEditReturnPressedSlot);
+    connect(ui->lineEdit, &XPLineEdit::ctrlUpPressed, [this]() {
+        if (m_valueIter == ~0)
+            m_valueIter = m_valueList.size() - 1;
+        else
+            m_valueIter = m_valueIter == 0 ? 0 : (m_valueIter - 1);
+        ui->lineEdit->setText(m_valueList[m_valueIter]);
+    });
+    connect(ui->lineEdit, &XPLineEdit::ctrlDownPressed, [this]() {
+        m_valueIter = std::min(m_valueIter + 1, m_valueList.size() - 1);
+        ui->lineEdit->setText(m_valueList[m_valueIter]);
+    });
+
 
     _restoreState();
     ui->lineEdit->setClearButtonEnabled(true);
@@ -159,9 +167,29 @@ void XtermPanel::_restoreState() {
             QString line = in.readLine();;
             while (!line.isNull())//字符串有内容
             {
-                m_valueList.push_back(line);
+                historyAppend(line);
                 line = in.readLine();//循环读取下行
             }
+        }
+    }
+}
+void XtermPanel::historyAppend(QString &text) {
+    if (!text.isEmpty()) {
+        auto iter = m_valueMap.find(text);
+        if (iter == m_valueMap.end()) {
+            //需要插入
+            m_valueList.append(text);
+            m_valueMap[text] = m_valueList.size() - 1;
+        } else {
+            //不需要插入
+            m_valueList.remove(iter.value());
+            m_valueList.append(text); //重新插入到尾部
+            iter.value() = m_valueList.size() - 1; //更新迭代器位置
+        }
+        if (m_valueList.size() > 100) {
+            //处理数量太多
+            m_valueMap.remove(m_valueList.front());
+            m_valueList.pop_front();
         }
     }
 }

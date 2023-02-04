@@ -45,7 +45,7 @@
       <number>1</number>
      </property>
      <item>
-      <widget class="QLineEdit" name="lineEdit"/>
+      <widget class="XPLineEdit" name="lineEdit"/>
      </item>
      <item>
       <widget class="QToolButton" name="toolButton_send">
@@ -67,6 +67,11 @@
    <class>Console</class>
    <extends>QTextEdit</extends>
    <header>console.h</header>
+  </customwidget>
+  <customwidget>
+   <class>XPLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>XPLineEdit.hpp</header>
   </customwidget>
  </customwidgets>
  <resources>
