@@ -147,7 +147,7 @@ void XtermPanel::_saveState() {
                 QStandardPaths::writableLocation(
                         QStandardPaths::AppDataLocation)).absoluteFilePath(
                 "CommandHistory.txt"));
-        if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+        if (file.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text)) {
             for (auto &i: m_valueList) {
                 file.write(i.toUtf8());
                 file.write("\n");
@@ -175,20 +175,10 @@ void XtermPanel::_restoreState() {
 }
 void XtermPanel::historyAppend(QString &text) {
     if (!text.isEmpty()) {
-        auto iter = m_valueMap.find(text);
-        if (iter == m_valueMap.end()) {
-            //需要插入
-            m_valueList.append(text);
-            m_valueMap[text] = m_valueList.size() - 1;
-        } else {
-            //不需要插入
-            m_valueList.remove(iter.value());
-            m_valueList.append(text); //重新插入到尾部
-            iter.value() = m_valueList.size() - 1; //更新迭代器位置
-        }
+        m_valueList.removeOne(text);
+        m_valueList.append(text);
         if (m_valueList.size() > 100) {
             //处理数量太多
-            m_valueMap.remove(m_valueList.front());
             m_valueList.pop_front();
         }
     }

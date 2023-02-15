@@ -12,6 +12,8 @@
 #include <QKeyEvent>
 #include <QComboBox>
 #include <QProcess>
+#include <QStandardPaths>
+#include <QDir>
 
 
 class IntEdit : public QLineEdit {
@@ -346,7 +348,12 @@ CommandPanel::CommandPanel(QWidget *parent, XtermPanel *xtermPanel, QString cpin
     vboxLayout->addLayout(hboxLayout);
     vboxLayout->addLayout(pFormLayout);
     connect(edit_bt, &QPushButton::released, [this, build_ui, pFormLayout]() {
-        QProcess::startDetached("./BowPad.exe", QStringList({m_cpiniFile}));
+        qInfo() << QDir(
+                qApp->applicationDirPath()).absoluteFilePath(
+                "BowPad.exe");
+        QProcess::startDetached(QDir(
+                qApp->applicationDirPath()).absoluteFilePath(
+                "BowPad.exe"), QStringList({m_cpiniFile}));
     });
 
     connect(refresh_bt, &QPushButton::released, [this, build_ui, pFormLayout]() {
