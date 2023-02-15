@@ -11,6 +11,7 @@
 #include <QDoubleValidator>
 #include <QKeyEvent>
 #include <QComboBox>
+#include <QProcess>
 
 
 class IntEdit : public QLineEdit {
@@ -289,37 +290,71 @@ public:
     QHBoxLayout *m_hBoxLayout = nullptr;//命令和后面采用的layout
     QVector<QWidget *> m_widgets;//命令和后面一系列玩意
 };
-
+void clearLyoutItem(QLayout *layout) {
+    for (auto i = layout->count() - 1; i >= 0; i--) {
+        auto item = layout->itemAt(i);
+        layout->removeItem(item);
+        if (item->layout())
+            clearLyoutItem(item->layout());
+        if (item->widget() != nullptr)
+            delete item->widget();
+    }
+}
 CommandPanel::CommandPanel(QWidget *parent, XtermPanel *xtermPanel, QString cpiniFile) :
         QWidget(parent), ui(new Ui::CommandPanel),
         m_xtermPanel(xtermPanel), m_cpiniFile(std::move(cpiniFile)) {
     ui->setupUi(this);
-    //构造子项
-    {
-        QFile file(m_cpiniFile);
-        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            QString line;
-            QTextStream in(&file);  //用文件构造流
-            do {
-                line = in.readLine();//读取一行放到字符串里
-                if (!line.isNull() && !line.isEmpty()) {
-                    auto item = QSharedPointer<CommandItem>(new CommandItem(this));
-                    item->fromLineString(line);
-                    m_items.append(item);
-                }
-            } while (!line.isNull());//字符串有内容
+    auto pFormLayout = new QFormLayout();
+    auto build_ui = [this, pFormLayout]() {
+        //构造子项
+        {
+            m_items.clear();
+            QFile file(m_cpiniFile);
+            if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                QString line;
+                QTextStream in(&file);  //用文件构造流
+                do {
+                    line = in.readLine();//读取一行放到字符串里
+                    if (!line.isNull() && !line.isEmpty()) {
+                        auto item = QSharedPointer<CommandItem>(new CommandItem(this));
+                        item->fromLineString(line);
+                        m_items.append(item);
+                    }
+                } while (!line.isNull());//字符串有内容
+            }
         }
-    }
+        //把子项添加到界面
+        {
+            for (qsizetype i = 0; i < m_items.count(); ++i) {
+                pFormLayout->setWidget(i, QFormLayout::LabelRole, m_items[i]->m_button);
+                pFormLayout->setLayout(i, QFormLayout::FieldRole, m_items[i]->m_hBoxLayout);
+            }
+        }
+    };
+    build_ui();
 
-    //把子项添加到界面
-    {
-        auto layout = new QFormLayout(this);
-        for (qsizetype i = 0; i < m_items.count(); ++i) {
-            layout->setWidget(i, QFormLayout::LabelRole, m_items[i]->m_button);
-            layout->setLayout(i, QFormLayout::FieldRole, m_items[i]->m_hBoxLayout);
-        }
-        setLayout(layout);
-    }
+    auto *vboxLayout = new QVBoxLayout(this);
+    auto *hboxLayout = new QHBoxLayout();
+
+    auto edit_bt = new QPushButton(this);
+    auto refresh_bt = new QPushButton(this);
+
+    edit_bt->setText("编辑界面");
+    refresh_bt->setText("刷新界面");
+    hboxLayout->addWidget(edit_bt);
+    hboxLayout->addWidget(refresh_bt);
+    vboxLayout->addLayout(hboxLayout);
+    vboxLayout->addLayout(pFormLayout);
+    connect(edit_bt, &QPushButton::released, [this, build_ui, pFormLayout]() {
+        QProcess::startDetached("./BowPad.exe", QStringList({m_cpiniFile}));
+    });
+
+    connect(refresh_bt, &QPushButton::released, [this, build_ui, pFormLayout]() {
+        qInfo() << "清空界面";
+        clearLyoutItem(pFormLayout);
+        qInfo() << "重新构造";
+        build_ui();
+    });
 
 }
 

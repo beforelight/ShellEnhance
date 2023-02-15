@@ -42,6 +42,8 @@ file(GLOB_RECURSE PROJECT_SOURCES
         "source/content/*.ui"
         )
 file(COPY source/content/cp_ini_default.cpini DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+file(COPY 3rd/BowPad.exe DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+install(FILES 3rd/BowPad.exe DESTINATION bin)
 configure_file("source/assets/style.qss" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/style.qss" COPYONLY)
 
 if (${QT_VERSION_MAJOR} GREATER_EQUAL 6)
