@@ -34,7 +34,6 @@ private:
     Ui::XtermPanel *ui;
     QSerialPort *m_serial = nullptr;
     QStringList m_valueList;//历史记录保存列表
-    QMap<QString, qsizetype> m_valueMap;
     qsizetype m_valueIter = ~0;//记录一下回溯到哪
     void historyAppend(QString &text);
 };
