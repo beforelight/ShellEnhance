@@ -73,6 +73,10 @@ Console::Console(QWidget *parent) :
     connect(copyAction, &QAction::triggered, [this]() { copy(); });
     addAction(copyAction);
 
+    auto clr_action = new QAction("清空历史", this);
+    addAction(clr_action);
+    connect(clr_action, &QAction::triggered, [this]() { clear(); });
+
     //读取历史
     {
         QFile file(QDir(
